@@ -1,0 +1,55 @@
+We will schedule an Amazon EC2 instance to:
+
+1.Start at specific time
+2.Stop at specific time
+Using CRON schedule
+
+boto3 cannot run automatically on its own
+So we need:
+
+A. Amazon EventBridge (CRON scheduler)
+B. AWS Lambda (runs code)
+C. boto3 (inside Lambda)
+
+Flow:
+
+EventBridge (CRON) → Lambda → boto3 → EC2 start/stop
+
+Step 1: Create EC2 Instance
+
+Step 2: Lambda Code (Start EC2)
+       Create Lambda function → paste code of file 
+
+
+Step 3: Add Permissions
+       Your Lambda must have permission:
+       Attach policy: AmazonEC2FullAccess
+
+Step 4: Create CRON Schedule
+       Go to EventBridge → scheduler → Create Schedule
+
+    Use CRON format:
+
+    Start at 9 AM daily
+    cron(0 9 * * ? *)
+    Stop at 6 PM daily
+    cron(0 18 * * ? *)
+    Testing 
+    cron(* * * * ? *)
+
+    Attach:
+    Target → attach Lambda
+    payload:
+    {
+        "action": "toggle"
+    }
+   
+
+    CRON uses UTC
+    Example (India 🇮🇳):
+    9 AM IST = 3:30 AM UTC
+    6 PM IST = 12:30 PM UTC
+
+Step 5: Test Manually
+      In Lambda:Click Test
+      Check: EC2 state changes
