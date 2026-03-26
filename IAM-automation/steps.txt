@@ -1,0 +1,150 @@
+Create users
+Create groups
+Add users to groups
+Remove users from group
+Delete users safely
+Delete groups safely
+Sync everything from YAML (source of truth)
+
+YAML = source of truth
+
+Meaning:
+
+If user exists in YAML → keep/update
+If user NOT in YAML → delete
+If group mapping changed → update
+
+iam-automation/
+ ├── users.yaml
+ └── main.py
+
+users:
+  - name: sneha
+    group: developers
+  - name: rahul
+    group: testers
+
+✔ CREATE
+Creates users from YAML
+Creates groups
+Assigns users
+✔ UPDATE
+Moves user to correct group
+Removes from wrong group
+✔ DELETE (SAFE)
+Removes access keys
+Removes login profile
+Removes from groups
+Then deletes user
+✔ CLEANUP
+Deletes unused groups
+
+
+primary code 
+import boto3
+import yaml
+import sys
+
+DRY_RUN = True  # CHANGE TO False TO APPLY CHANGES
+
+iam = boto3.client('iam')
+
+
+def log(action, message):
+    print(f"{action} | {message}")
+
+
+def execute(func, *args, **kwargs):
+    if DRY_RUN:
+        log("DRY-RUN", f"{func.__name__} args={args} kwargs={kwargs}")
+    else:
+        return func(*args, **kwargs)
+
+
+# -------------------------
+# LOAD YAML
+# -------------------------
+with open('users.yml') as f:
+    data = yaml.safe_load(f)
+
+desired_users = {u['name']: u['group'] for u in data['users']}
+desired_groups = set(desired_users.values())
+
+# -------------------------
+# EXISTING AWS STATE
+# -------------------------
+existing_users = [u['UserName'] for u in iam.list_users()['Users']]
+existing_groups = [g['GroupName'] for g in iam.list_groups()['Groups']]
+
+# -------------------------
+# CREATE / UPDATE
+# -------------------------
+for username, group in desired_users.items():
+
+    if username not in existing_users:
+        log("CREATE", f"user {username}")
+        execute(iam.create_user, UserName=username)
+
+    if group not in existing_groups:
+        log("CREATE", f"group {group}")
+        execute(iam.create_group, GroupName=group)
+
+    # Fix group membership
+    groups = iam.list_groups_for_user(UserName=username)['Groups'] if username in existing_users else []
+
+    for g in groups:
+        if g['GroupName'] != group:
+            log("UPDATE", f"remove {username} from {g['GroupName']}")
+            execute(iam.remove_user_from_group, GroupName=g['GroupName'], UserName=username)
+
+    log("UPDATE", f"ensure {username} in {group}")
+    execute(iam.add_user_to_group, GroupName=group, UserName=username)
+
+
+# -------------------------
+# DELETE USERS
+# -------------------------
+for user in existing_users:
+    if user not in desired_users:
+
+        log("DELETE", f"user {user}")
+
+        # Remove from groups
+        groups = iam.list_groups_for_user(UserName=user)['Groups']
+        for g in groups:
+            execute(iam.remove_user_from_group, GroupName=g['GroupName'], UserName=user)
+
+        # Delete keys
+        keys = iam.list_access_keys(UserName=user)['AccessKeyMetadata']
+        for key in keys:
+            execute(iam.delete_access_key, UserName=user, AccessKeyId=key['AccessKeyId'])
+
+        # Delete login profile
+        try:
+            execute(iam.delete_login_profile, UserName=user)
+        except:
+            pass
+
+        execute(iam.delete_user, UserName=user)
+
+
+# -------------------------
+# DELETE GROUPS
+# -------------------------
+for group in existing_groups:
+    if group not in desired_groups:
+
+        log("DELETE", f"group {group}")
+
+        users = iam.get_group(GroupName=group)['Users']
+        for u in users:
+            execute(iam.remove_user_from_group, GroupName=group, UserName=u['UserName'])
+
+        execute(iam.delete_group, GroupName=group)
+
+print("EXISTING USERS:", existing_users)
+print("YAML USERS:", list(desired_users.keys()))
+
+
+print("\n🎯 DONE (Dry Run Mode)" if DRY_RUN else "\n🚀 CHANGES APPLIED")
+
