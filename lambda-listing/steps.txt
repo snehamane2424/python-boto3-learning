@@ -1,0 +1,18 @@
+step 1: Create two-three functions
+
+step 2:create requirement.txt
+       pip install -r requirements.txt
+
+step 3:Create config file
+       add region and output file folder/name
+
+step 4:Create Lambda service 
+
+step 5: Create utils file for processing json
+
+step 6: Create main file
+
+step 7:python main.py
+
+step 8: save json output
+
