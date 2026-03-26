@@ -153,6 +153,6 @@ print("YAML USERS:", list(desired_users.keys()))
 # FINAL MESSAGE
 # =========================
 if DRY_RUN:
-    print("\n🧪 DRY-RUN COMPLETE (No changes made)")
+    print("\n DRY-RUN COMPLETE (No changes made)")
 else:
-    print("\n🚀 CHANGES APPLIED SUCCESSFULLY")
+    print("\n CHANGES APPLIED SUCCESSFULLY")
