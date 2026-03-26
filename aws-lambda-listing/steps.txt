@@ -1,0 +1,38 @@
+step 1: mkdir aws-lambda-listing
+step 2: cd aws-lambda-listing
+
+step 3: mkdir config src output
+step 4: touch requirements.txt steps.txt
+
+step 5: create config/aws_config.md-- This step connects your local machine to AWS.
+
+step 6. create src/list_lambda_basic.py-- Connects to AWS Lambda
+                                  Fetches all functions
+                                  Prints raw JSON 
+
+step 7: create src/extract_lambda_details.py-- Reads JSON response
+                                       Extracts only useful fields
+                                       Displays clean output
+
+step 8: create src/save_lambda_to_json.py-- Converts AWS response → structured JSON
+                                            Saves it to a file
+                                            Useful for reports / automation
+
+step 9: create src/pagination_lambda.py-- Handle Large Data (Pagination)
+                                          Handles large AWS accounts
+                                          Ensures no function is misse
+
+# AWS Lambda Listing
+
+## Steps Covered:
+1. Setup AWS CLI
+2. List Lambda functions
+3. Extract details
+4. Save JSON output
+5. Handle pagination
+
+## Run Commands:
+python src/list_lambda_basic.py
+python src/extract_lambda_details.py
+python src/save_lambda_to_json.py
+python src/pagination_lambda.py
