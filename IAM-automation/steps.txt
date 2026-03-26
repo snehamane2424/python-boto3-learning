@@ -40,7 +40,11 @@ Then deletes user
 Deletes unused groups
 
 
-primary code 
+
+
+
+##########--------------OLD code without Deletion confirmation msg
+
 import boto3
 import yaml
 import sys
@@ -146,5 +150,5 @@ print("EXISTING USERS:", existing_users)
 print("YAML USERS:", list(desired_users.keys()))
 
 
-print("\n🎯 DONE (Dry Run Mode)" if DRY_RUN else "\n🚀 CHANGES APPLIED")
+print("\n DONE (Dry Run Mode)" if DRY_RUN else "\n🚀 CHANGES APPLIED")
 
