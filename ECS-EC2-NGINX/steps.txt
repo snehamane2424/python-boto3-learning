@@ -1,0 +1,1 @@
+ECS optimized AMI- ami-0d7bef25b7714d278 -ap-south-1
